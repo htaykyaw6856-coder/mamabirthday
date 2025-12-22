@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="my">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Happy Birthday</title>
+    <style>
+        :root{
+            --accent: #ff4081;
+            --card-bg: #fff;
+            --bg-grad-1: #ff9a9e;
+            --bg-grad-2: #fad0c4;
+        }
+
+        /* Reset + layout */
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            min-height: 100vh; /* avoid issues with mobile url bars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            overflow-x: hidden;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            padding: 24px; /* breathing room on tiny devices */
+        }
+
+        /* Card: responsive width with safe max */
+        .card {
+            background: var(--card-bg);
+            padding: clamp(18px, 4.5vw, 30px);
+            border-radius: 18px;
+            text-align: center;
+            width: min(420px, 96%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+            z-index: 10;
+            transform: translateZ(0); /* promote to own layer */
+        }
+
+        /* Profile image scales with viewport */
+        .profile {
+            width: clamp(100px, 24vw, 160px);
+            height: clamp(100px, 24vw, 160px);
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--accent);
+            margin-bottom: 14px;
+            cursor: pointer;
+            display: inline-block;
+            touch-action: manipulation;
+        }
+
+        .imageboxdiv {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(8px, 3vw, 18px);
+            margin-top: 10px;
+            flex-wrap: wrap; /* wrap on narrow viewports */
+        }
+
+        .imgbox {
+            width: clamp(60px, 18vw, 90px);
+            height: clamp(60px, 18vw, 90px);
+            object-fit: cover;
+            border-radius: 8px;
+            padding: 2px;
+            border: 2px solid white;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+            background: #fff;
+        }
+
+        h1.small {
+            font-size: clamp(14px, 3vw, 18px);
+            margin: 6px 0;
+            color: var(--accent);
+        }
+
+        h1.main {
+            font-size: clamp(18px, 5vw, 28px);
+            margin: 4px 0 8px;
+            color: #333;
+        }
+
+        button {
+            margin-top: 14px;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 28px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            box-shadow: 0 6px 18px rgba(255,64,129,0.18);
+        }
+
+        button:active { transform: translateY(1px); }
+
+        /* balloon (floating elements) */
+        .balloon {
+            position: fixed;
+            bottom: -120px;
+            width: clamp(28px, 6vw, 48px);
+            height: clamp(40px, 8vw, 64px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.12);
+            will-change: transform, opacity;
+            animation-name: floatUp;
+            animation-timing-function: linear;
+            opacity: 0.98;
+        }
+
+        @keyframes floatUp {
+            from { transform: translateY(0) rotate(0deg); }
+            to { transform: translateY(calc(-100vh - 200px)) rotate(30deg); }
+        }
+
+        /* Loader / Splash overlay */
+        #loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff9a9e, #ffd1d9);
+            z-index: 1000;
+            transition: opacity 300ms ease, visibility 300ms;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loader-box {
+            text-align: center;
+            color: white;
+            padding: 22px 28px;
+            border-radius: 14px;
+            backdrop-filter: blur(6px);
+          
+            max-width: 92%;
+        }
+
+        .spinner {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 7px solid rgba(255,255,255,0.22);
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 14px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loader-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+        .loader-sub { font-size: 13px; opacity: 0.95; margin-bottom: 10px; }
+
+        .start-btn {
+            background: #fff;
+            color: var(--accent);
+            padding: 10px 16px;
+            border-radius: 26px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            min-width: 140px;
+        }
+
+        .start-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+        /* small music toggle */
+        #musicToggle {
+            position: fixed;
+            right: 14px;
+            top: 14px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 8px 12px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+            z-index: 200;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        /* popup */
+        #popup {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.35);
+            z-index: 150;
+            padding: 20px;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            width: min(360px, 92%);
+            animation: pop 0.28s ease;
+            font-size: 15px;
+        }
+
+        @keyframes pop {
+            from { transform: scale(.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Accessibility: respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .balloon, .spinner { animation: none !important; }
+            .balloon { opacity: 0.9; }
+        }
+
+        /* Breakpoints for finer tuning */
+        @media (max-width: 420px) {
+            .card { padding: 14px; border-radius: 14px; }
+            .profile { border-width: 3px; }
+            .imageboxdiv { gap: 10px; }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- Loader / Splash overlay (Start button added so the JS reference exists) -->
+    <div id="loader" role="dialog" aria-modal="true" aria-label="Welcome splash">
+        <div class="loader-box" aria-live="polite">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loader-title">🎂 Happy Birthday! par sis</div>
+            </div>
+    </div>
+
+    <!-- audio (no autoplay) -->
+    <audio id="bgAudio" loop preload="auto" playsinline>
+        <source src="birthday.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div id="musicToggle" role="button" aria-pressed="false" aria-label="Play / pause music">♪</div>
+
+    <div class="card" id="mainCard" aria-hidden="true">
+        <img src="./image/hh.jpg" class="profile" alt="Profile photo" onclick="toggleMusic()" loading="lazy">
+        <h1 class="small" aria-hidden="false">25,DEC</h1>
+        <h1 class="main">🎂 Happy Birthday 🎉</h1>
+
+        <div class="imageboxdiv" aria-hidden="false">
+            <img src="./image/sis.jpg" class="imgbox" alt="Sis photo" loading="lazy">
+            <img src="./image/h1.jpg" class="imgbox" alt="Photo 1" loading="lazy">
+            <img src="./image/hh1.jpg" class="imgbox" alt="Photo 2" loading="lazy">
+        </div>
+
+        <button onclick="wish()" aria-haspopup="dialog" aria-controls="popup">Click Me 🎈</button>
+    </div>
+
+    <div id="popup" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Birthday wish">
+        <div class="popup-box">
+            🎉 မွေးနေ့မှစပြီး ပျော်ရွှင်အောင်မြင်ပါစေ sis ရေ🎉
+            <br>ရည်မှန်းချက်တွေအမြန်ဆုံး အကောင်အထည်ဖော်နိုင်ပါစေ.
+            <br><br>
+            <button onclick="closePopup()" aria-label="Close">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const bgAudio = document.getElementById("bgAudio");
+        const musicToggle = document.getElementById("musicToggle");
+        const loader = document.getElementById("loader");
+        const startBtn = document.getElementById("startBtn");
+        const mainCard = document.getElementById("mainCard");
+        const popup = document.getElementById("popup");
+
+        // Update music toggle UI and aria
+        function updateMusicToggle(isPlaying) {
+            if (!musicToggle) return;
+            musicToggle.textContent = isPlaying ? "♫ Playing" : "♪";
+            musicToggle.style.background = isPlaying ? "rgba(255,64,129,0.95)" : "rgba(255,255,255,0.95)";
+            musicToggle.setAttribute("aria-pressed", String(Boolean(isPlaying)));
+        }
+
+        // Play/Pause toggle (user gesture required for starting audio)
+        function toggleMusic() {
+            if (!bgAudio) return;
+            if (bgAudio.paused) {
+                bgAudio.play().then(() => updateMusicToggle(true)).catch(err => {
+                    console.warn("Play failed:", err);
+                    updateMusicToggle(false);
+                });
+            } else {
+                bgAudio.pause();
+                updateMusicToggle(false);
+            }
+        }
+
+        // Wire small toggle button
+        if (musicToggle) {
+            musicToggle.addEventListener("click", toggleMusic);
+        }
+
+        // Enter site (called by Start button)
+        function enterSite() {
+            // Attempt to play audio as this is a direct user gesture
+            if (bgAudio) {
+                bgAudio.play().then(() => updateMusicToggle(true)).catch((err) => {
+                    console.warn("Audio playback failed on start:", err);
+                    updateMusicToggle(false);
+                });
+            }
+
+            // Show main content and hide loader
+            if (mainCard) mainCard.setAttribute("aria-hidden", "false");
+            loader.classList.add("hidden");
+
+            // Remove loader from DOM after transition
+            setTimeout(() => {
+                if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+            }, 400);
+        }
+
+        // Start button event
+        if (startBtn) {
+            startBtn.addEventListener("click", () => {
+                enterSite();
+            });
+        }
+
+        // Fallback: auto-hide loader after a short delay (does not attempt to autoplay)
+        setTimeout(() => {
+            if (loader && !loader.classList.contains("hidden")) {
+                loader.classList.add("hidden");
+                setTimeout(() => {
+                    if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+                    if (mainCard) mainCard.setAttribute("aria-hidden", "false");
+                }, 400);
+            }
+        }, 3000);
+
+        // Popup open/close and balloons
+        function wish() {
+            if (!popup) return;
+            popup.style.display = "flex";
+            popup.setAttribute("aria-hidden", "false");
+            createBalloons();
+
+            if (!bgAudio) return;
+            bgAudio.play().then(() => updateMusicToggle(true)).catch((err) => {
+                console.warn("Audio playback failed (user interaction might be required):", err);
+                updateMusicToggle(false);
+            });
+        }
+
+        function closePopup() {
+            if (!popup) return;
+            popup.style.display = "none";
+            popup.setAttribute("aria-hidden", "true");
+        }
+
+        // Create floating balloons with responsive units
+        function createBalloons() {
+            // Respect reduced motion preference
+            const rm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (rm) return;
+
+            const count = Math.min(20, Math.max(8, Math.round(window.innerWidth / 60)));
+            for (let i = 0; i < count; i++) {
+                const b = document.createElement("div");
+                b.className = "balloon";
+
+                // Use vw for horizontal positioning so they adapt on resize
+                const leftVw = (Math.random() * 100);
+                b.style.left = leftVw + "vw";
+
+                // Randomize color & size/animation
+                b.style.background = randomColor();
+                const dur = (4 + Math.random() * 4); // 4s - 8s
+                b.style.animationDuration = dur + "s";
+                b.style.opacity = 0.98 - Math.random() * 0.15;
+
+                document.body.appendChild(b);
+
+                // Remove after animation end (slightly longer to ensure off-screen)
+                const removeAfter = (dur + 0.5) * 1000;
+                setTimeout(() => {
+                    if (b && b.parentNode) b.parentNode.removeChild(b);
+                }, removeAfter);
+            }
+        }
+
+        function randomColor() {
+            const c = ["#ff5252", "#ffeb3b", "#69f0ae", "#40c4ff", "#e040fb", "#ff8a65", "#ffd180"];
+            return c[Math.floor(Math.random() * c.length)];
+        }
+
+        // Make sure mainCard becomes visible if loader is removed by fallback
+        window.addEventListener('DOMContentLoaded', () => {
+            // ensure images are crisp on high-DPI
+            document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                img.decoding = 'async';
+            });
+        });
+
+        // Accessibility: allow Enter key on focused musicToggle or startBtn
+        [musicToggle, startBtn].forEach(el => {
+            if (!el) return;
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    el.click();
+                }
+            });
+        });
+
+        // Defensive: if audio file fails to load, update UI so user can click manually
+        bgAudio.addEventListener('error', () => {
+            console.warn('Audio failed to load; ensure birthday.mp3 exists and server serves audio/mpeg.');
+            updateMusicToggle(false);
+        });
+    </script>
+</body>
+
+</html>
